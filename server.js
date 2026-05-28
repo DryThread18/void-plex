@@ -31,33 +31,86 @@ app.post("/scan", async (req, res) => {
 
     }
 
-    const response = await fetch(url, {
+    // EXTRACT PATH ONLY
 
-      method: "POST",
+    const parsedUrl = new URL(url);
 
-      headers: {
-        "content-type": "application/json",
-        "user-agent": "Mozilla/5.0"
-      },
+    const pathOnly =
+      parsedUrl.pathname;
 
-      body: JSON.stringify({
+    // TEST MULTIPLE VARIATIONS
+
+    const testPayloads = [
+
+      {
+        path: pathOnly,
         page_token: "",
         page_index: 0
-      })
+      },
 
-    });
+      {
+        path: decodeURIComponent(pathOnly),
+        page_token: "",
+        page_index: 0
+      },
 
-    const text = await response.text();
+      {
+        path: pathOnly.replace(/\/$/, ""),
+        page_token: "",
+        page_index: 0
+      }
 
-    let parsed;
+    ];
 
-    try {
+    const results = [];
 
-      parsed = JSON.parse(text);
+    for (const payload of testPayloads) {
 
-    } catch {
+      try {
 
-      parsed = null;
+        const response = await fetch(url, {
+
+          method: "POST",
+
+          headers: {
+            "content-type": "application/json",
+            "user-agent": "Mozilla/5.0"
+          },
+
+          body: JSON.stringify(payload)
+
+        });
+
+        const text =
+          await response.text();
+
+        results.push({
+
+          payload,
+
+          status: response.status,
+
+          contentType:
+            response.headers.get(
+              "content-type"
+            ),
+
+          preview:
+            text.slice(0, 1000)
+
+        });
+
+      } catch (err) {
+
+        results.push({
+
+          payload,
+
+          error: err.message
+
+        });
+
+      }
 
     }
 
@@ -65,15 +118,9 @@ app.post("/scan", async (req, res) => {
 
       success: true,
 
-      debug: {
-        status: response.status,
-        contentType:
-          response.headers.get("content-type")
-      },
+      tested: results.length,
 
-      parsed,
-
-      preview: text.slice(0, 5000)
+      results
 
     });
 

@@ -31,14 +31,10 @@ app.post("/scan", async (req, res) => {
 
     }
 
-    // EXTRACT PATH ONLY
-
     const parsedUrl = new URL(url);
 
     const pathOnly =
       parsedUrl.pathname;
-
-    // TEST MULTIPLE VARIATIONS
 
     const testPayloads = [
 
@@ -120,6 +116,64 @@ app.post("/scan", async (req, res) => {
       tested: results.length,
 
       results
+
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+
+      success: false,
+      error: err.message
+
+    });
+
+  }
+
+});
+
+app.post("/test-file", async (req, res) => {
+
+  try {
+
+    const { url } = req.body;
+
+    if (!url) {
+
+      return res.status(400).json({
+        success: false,
+        error: "Missing URL"
+      });
+
+    }
+
+    const response = await fetch(url, {
+
+      headers: {
+        "user-agent": "Mozilla/5.0"
+      }
+
+    });
+
+    const text =
+      await response.text();
+
+    res.json({
+
+      success: true,
+
+      status: response.status,
+
+      contentType:
+        response.headers.get(
+          "content-type"
+        ),
+
+      finalUrl:
+        response.url,
+
+      preview:
+        text.slice(0, 5000)
 
     });
 

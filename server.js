@@ -23,10 +23,12 @@ app.post("/scan", async (req, res) => {
     const { url } = req.body;
 
     if (!url) {
+
       return res.status(400).json({
         success: false,
         error: "Missing URL"
       });
+
     }
 
     const response = await fetch(url, {
@@ -34,19 +36,30 @@ app.post("/scan", async (req, res) => {
       method: "POST",
 
       headers: {
-        "content-type":
-          "application/x-www-form-urlencoded;charset=UTF-8",
+        "content-type": "application/json",
         "user-agent": "Mozilla/5.0"
       },
 
-      body: new URLSearchParams({
+      body: JSON.stringify({
         page_token: "",
-        page_index: "0"
+        page_index: 0
       })
 
     });
 
     const text = await response.text();
+
+    let parsed;
+
+    try {
+
+      parsed = JSON.parse(text);
+
+    } catch {
+
+      parsed = null;
+
+    }
 
     res.json({
 
@@ -58,6 +71,8 @@ app.post("/scan", async (req, res) => {
           response.headers.get("content-type")
       },
 
+      parsed,
+
       preview: text.slice(0, 5000)
 
     });
@@ -65,8 +80,10 @@ app.post("/scan", async (req, res) => {
   } catch (err) {
 
     res.status(500).json({
+
       success: false,
       error: err.message
+
     });
 
   }

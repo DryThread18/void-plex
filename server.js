@@ -172,8 +172,7 @@ app.post("/test-file", async (req, res) => {
       finalUrl:
         response.url,
 
-      preview:
-        text.slice(0, 5000)
+      preview: text
 
     });
 

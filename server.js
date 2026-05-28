@@ -95,8 +95,7 @@ app.post("/scan", async (req, res) => {
               "content-type"
             ),
 
-          preview:
-            text.slice(0, 1000)
+          preview: text
 
         });
 

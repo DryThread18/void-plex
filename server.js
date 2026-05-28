@@ -189,6 +189,94 @@ app.post("/test-file", async (req, res) => {
 
 });
 
+app.post("/resolve-movie", async (req, res) => {
+
+  try {
+
+    const { url } = req.body;
+
+    if (!url) {
+
+      return res.status(400).json({
+        success: false,
+        error: "Missing URL"
+      });
+
+    }
+
+    const response = await fetch(url, {
+
+      headers: {
+        "user-agent": "Mozilla/5.0",
+        "accept": "application/json"
+      }
+
+    });
+
+    const text =
+      await response.text();
+
+    let data;
+
+    try {
+
+      data = JSON.parse(text);
+
+    } catch {
+
+      return res.status(500).json({
+
+        success: false,
+        error: "Response was not valid JSON",
+
+        preview:
+          text.slice(0, 1000)
+
+      });
+
+    }
+
+    const ddl =
+      data.link
+        ? `https://drive.voidhub.workers.dev${data.link}`
+        : null;
+
+    res.json({
+
+      success: true,
+
+      name:
+        data.name,
+
+      size:
+        data.size,
+
+      thumbnailLink:
+        data.thumbnailLink,
+
+      fileExtension:
+        data.fileExtension,
+
+      mimeType:
+        data.mimeType,
+
+      ddl
+
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+
+      success: false,
+      error: err.message
+
+    });
+
+  }
+
+});
+
 const PORT =
   process.env.PORT || 3000;
 

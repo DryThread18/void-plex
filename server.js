@@ -204,14 +204,24 @@ app.post("/resolve-movie", async (req, res) => {
 
     }
 
-    const response = await fetch(url, {
+    const parsedUrl =
+      new URL(url);
 
-      headers: {
-        "user-agent": "Mozilla/5.0",
-        "accept": "application/json"
-      }
+    const response =
+      await fetch(url, {
 
-    });
+        method: "POST",
+
+        headers: {
+          "content-type": "application/json",
+          "user-agent": "Mozilla/5.0"
+        },
+
+        body: JSON.stringify({
+          path: parsedUrl.pathname
+        })
+
+      });
 
     const text =
       await response.text();
@@ -220,14 +230,17 @@ app.post("/resolve-movie", async (req, res) => {
 
     try {
 
-      data = JSON.parse(text);
+      data =
+        JSON.parse(text);
 
     } catch {
 
       return res.status(500).json({
 
         success: false,
-        error: "Response was not valid JSON",
+
+        error:
+          "Response was not valid JSON",
 
         preview:
           text.slice(0, 1000)
@@ -238,7 +251,7 @@ app.post("/resolve-movie", async (req, res) => {
 
     const ddl =
       data.link
-        ? `https://drive.voidhub.workers.dev${data.link}`
+        ? `${parsedUrl.origin}${data.link}`
         : null;
 
     res.json({

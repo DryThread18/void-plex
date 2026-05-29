@@ -130,7 +130,9 @@ app.post("/test-file", async (req, res) => {
 });
 
 app.post("/resolve-movie", async (req, res) => {
+
   try {
+
     const { url } = req.body;
 
     if (!url) {
@@ -142,49 +144,71 @@ app.post("/resolve-movie", async (req, res) => {
 
     const parsedUrl = new URL(url);
 
-    const response = await fetch(url, {
-  headers: {
-    "user-agent": "Mozilla/5.0"
-  }
-});
-
-const html = await response.text();
-console.log("HTML PREVIEW START");
-console.log(html.substring(0, 5000));
-console.log("HTML PREVIEW END");    
-
-console.log("========== RESOLVE ==========");
-console.log("Input URL:", url);
-console.log("Status:", response.status);
-
-const ddlMatch = html.match(
-  /https?:\/\/[^"'\\s]+download\.aspx[^"'\\s]+/i
-);
-
-const ddl = ddlMatch ? ddlMatch[0] : null;
-
-console.log("DDL FOUND:", ddl);
-console.log("=============================");
-
     console.log("========== RESOLVE ==========");
     console.log("Input URL:", url);
     console.log("Path:", parsedUrl.pathname);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "user-agent": "Mozilla/5.0"
+      },
+      body: JSON.stringify({
+        path: parsedUrl.pathname
+      })
+    });
+
     console.log("Status:", response.status);
+    console.log("Content-Type:", response.headers.get("content-type"));
+    console.log("Set-Cookie:", response.headers.get("set-cookie"));
+
+    const text = await response.text();
+
     console.log("Response:");
-    console.log(text);
+    console.log(text.substring(0, 3000));
+
     console.log("=============================");
 
-    res.json({
-  success: true,
-  ddl
-});
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+
+      return res.status(500).json({
+        success: false,
+        error: "Response was not valid JSON",
+        preview: text.substring(0, 3000)
+      });
+
+    }
+
+    const ddl = data.link
+      ? `${parsedUrl.origin}${data.link}`
+      : null;
+
+    return res.json({
+      success: true,
+      name: data.name,
+      size: data.size,
+      thumbnailLink: data.thumbnailLink,
+      fileExtension: data.fileExtension,
+      mimeType: data.mimeType,
+      ddl
+    });
 
   } catch (err) {
-    res.status(500).json({
+
+    console.error(err);
+
+    return res.status(500).json({
       success: false,
       error: err.message
     });
+
   }
+
 });
 
 const PORT = process.env.PORT || 3000;

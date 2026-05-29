@@ -143,17 +143,25 @@ app.post("/resolve-movie", async (req, res) => {
     const parsedUrl = new URL(url);
 
     const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "user-agent": "Mozilla/5.0"
-      },
-      body: JSON.stringify({
-        path: parsedUrl.pathname
-      })
-    });
+  headers: {
+    "user-agent": "Mozilla/5.0"
+  }
+});
 
-    const text = await response.text();
+const html = await response.text();
+
+console.log("========== RESOLVE ==========");
+console.log("Input URL:", url);
+console.log("Status:", response.status);
+
+const ddlMatch = html.match(
+  /https?:\/\/[^"'\\s]+download\.aspx[^"'\\s]+/i
+);
+
+const ddl = ddlMatch ? ddlMatch[0] : null;
+
+console.log("DDL FOUND:", ddl);
+console.log("=============================");
 
     console.log("========== RESOLVE ==========");
     console.log("Input URL:", url);
@@ -163,32 +171,10 @@ app.post("/resolve-movie", async (req, res) => {
     console.log(text);
     console.log("=============================");
 
-    let data;
-
-    try {
-      data = JSON.parse(text);
-    } catch {
-      return res.status(500).json({
-        success: false,
-        error: "Response was not valid JSON",
-        preview: text.slice(0, 1000)
-      });
-    }
-
-    const ddl =
-      data.link
-        ? `${parsedUrl.origin}${data.link}`
-        : null;
-
     res.json({
-      success: true,
-      name: data.name,
-      size: data.size,
-      thumbnailLink: data.thumbnailLink,
-      fileExtension: data.fileExtension,
-      mimeType: data.mimeType,
-      ddl
-    });
+  success: true,
+  ddl
+});
 
   } catch (err) {
     res.status(500).json({

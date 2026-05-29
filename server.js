@@ -149,6 +149,9 @@ app.post("/resolve-movie", async (req, res) => {
 });
 
 const html = await response.text();
+console.log("HTML PREVIEW START");
+console.log(html.substring(0, 5000));
+console.log("HTML PREVIEW END");    
 
 console.log("========== RESOLVE ==========");
 console.log("Input URL:", url);
